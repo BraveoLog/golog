@@ -53,15 +53,21 @@ mesmo `BD_CADASTRO_URL` usado pelo LogFlow.
 Antes de gravar a linha, o `doPost` do Apps Script roda duas
 verificações, lendo abas da própria planilha `Bd_Cadastro`:
 
-1. **Placa cadastrada.** Procura a PLACA informada na aba
-   `Bd_Cadastros` (coluna cujo cabeçalho contém "PLACA"). Se não
-   encontrar, devolve o erro *"Motorista não está cadastrado. A placa
-   informada não consta em Bd_Cadastros."* e não grava nada.
+1. **Placa cadastrada.** Procura a PLACA informada na **coluna I**
+   (fixa, não por nome de cabeçalho) da aba `Bd_Cadastros`. Se não
+   encontrar, devolve o erro *"Placa não cadastrada: '...' não consta
+   na coluna PLACA da aba 'Bd_Cadastros'. Cadastre o veículo no
+   Cadflow antes de informar a disponibilidade."* e não grava nada.
 2. **Carga finalizada.** Procura o COD DA ULTIMA CARGA na aba
    `Cargas_Finalizadas`, coluna **F "Carga Limpa"**. Se não encontrar
    a linha, ou se a coluna **E "Data Fim Viagem"** estiver vazia,
-   devolve o erro *"O motorista ainda tem cargas para finalizar."* e
-   não grava nada.
+   devolve o erro *"Carga não finalizada: o código '...' não consta
+   com Data Fim Viagem preenchida na aba 'Cargas_Finalizadas'. O
+   motorista ainda tem carga em aberto."* e não grava nada.
+
+As duas mensagens de erro sempre citam o valor exato que falhou (a
+placa ou o código da carga), para deixar claro qual das duas
+validações barrou o envio.
 
 Essas duas validações valem **só para o GOLOG** — o Cadflow (que é o
 formulário que cria o cadastro em `Bd_Cadastros`) não passa por elas.

@@ -76,7 +76,9 @@ function validarDisponibilidade(dados) {
   }
 
   if (!placaCadastrada(placa)) {
-    return 'Motorista não está cadastrado. A placa informada não consta em Bd_Cadastros.';
+    return `Placa não cadastrada: "${placa}" não consta na coluna PLACA `
+      + `da aba "${ABA_CADASTROS}". Cadastre o veículo no Cadflow antes `
+      + `de informar a disponibilidade.`;
   }
 
   const codCarga = normalizarTexto(dados.codUltimaCarga);
@@ -86,14 +88,20 @@ function validarDisponibilidade(dados) {
   }
 
   if (!cargaFinalizada(codCarga)) {
-    return 'O motorista ainda tem cargas para finalizar.';
+    return `Carga não finalizada: o código "${codCarga}" não consta com `
+      + `Data Fim Viagem preenchida na aba "${ABA_CARGAS_FINALIZADAS}". `
+      + `O motorista ainda tem carga em aberto.`;
   }
 
   return null;
 }
 
-// Procura a placa (coluna cujo cabeçalho contém "PLACA") na aba
-// Bd_Cadastros. Retorna true se encontrada.
+// Coluna I (índice 8, zero-based) da aba Bd_Cadastros — "PLACA do
+// Veiculo". Fixo por definição da planilha, sem busca por cabeçalho.
+const COL_PLACA_CADASTROS = 8;
+
+// Procura a placa na coluna I da aba Bd_Cadastros. Retorna true se
+// encontrada.
 function placaCadastrada(placaNormalizada) {
   const planilha = SpreadsheetApp.openById(PLANILHA_ID);
   const aba = planilha.getSheetByName(ABA_CADASTROS);
@@ -108,15 +116,8 @@ function placaCadastrada(placaNormalizada) {
     return false;
   }
 
-  const cabecalhos = valores[0];
-  const colPlaca = encontrarColuna(cabecalhos, 'PLACA');
-
-  if (colPlaca === -1) {
-    throw new Error(`Coluna de PLACA não encontrada em "${ABA_CADASTROS}"`);
-  }
-
   for (let i = 1; i < valores.length; i++) {
-    if (normalizarTexto(valores[i][colPlaca]) === placaNormalizada) {
+    if (normalizarTexto(valores[i][COL_PLACA_CADASTROS]) === placaNormalizada) {
       return true;
     }
   }
@@ -259,6 +260,6 @@ function doGet() {
   return respostaJson({
     status: 'OK',
     message: 'Script funcionando corretamente',
-    versao: '1.1'
+    versao: '1.2'
   });
 }

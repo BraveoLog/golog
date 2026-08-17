@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLOG - Disponibilidade de Frota</title>
+  <link rel="stylesheet" href="disponibilidade-frota.css">
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">HM2CZKYNKVVN-1053478190-31419</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">36aa8e14-ad32-4c80-9818-cc92c381db6b</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://arilugestao.sharepoint.com/sites/LOGISTICA-ARILU/_layouts/15/DocIdRedir.aspx?ID=HM2CZKYNKVVN-1053478190-31419, HM2CZKYNKVVN-1053478190-31419</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">GL</div>
+        <div class="brand-text">
+          <div class="brand-name">GOLOG</div>
+          <div class="brand-sub">Disponibilidade de Frota</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <main class="main-content">
+      <div class="form-header">
+        <h1>Disponibilidade de Frota</h1>
+        <p>
+          Informe a situação atual do veículo. A placa e o código da última
+          carga são validados automaticamente antes do registro.
+        </p>
+      </div>
+
+      <form id="disponibilidadeForm">
+        <div class="panel">
+          <!-- Seção: Veículo e Motorista -->
+          <section class="form-section">
+            <h2 class="section-title">Veículo e Motorista</h2>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="placaVeiculo">PLACA do Veículo *</label>
+
+                <input
+                  type="text"
+                  id="placaVeiculo"
+                  name="placaVeiculo"
+                  placeholder="AAA0A00 ou AAA0000"
+                  maxlength="7"
+                  required
+                >
+
+                <span class="field-hint">
+                  Formato antigo (AAA0000) ou Mercosul (AAA0A00). Precisa
+                  estar cadastrada em Bd_Cadastros.
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label for="nomeMotorista">Motorista *</label>
+
+                <input
+                  type="text"
+                  id="nomeMotorista"
+                  name="nomeMotorista"
+                  required
+                >
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="codUltimaCarga">COD DA ULTIMA CARGA *</label>
+
+                <input
+                  type="text"
+                  id="codUltimaCarga"
+                  name="codUltimaCarga"
+                  required
+                >
+
+                <span class="field-hint">
+                  A carga precisa constar como finalizada em
+                  Cargas_Finalizadas.
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção: Situação -->
+          <section class="form-section">
+            <h2 class="section-title">Situação</h2>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="status">STATUS *</label>
+
+                <div class="select-wrap">
+                  <select id="status" name="status" required>
+                    <option value="">Selecione o status</option>
+                    <option value="DISPONIVEL">DISPONÍVEL</option>
+                    <option value="EM MANUTENCAO">EM MANUTENÇÃO</option>
+                    <option value="INDISPONIVEL">INDISPONÍVEL</option>
+                    <option value="OCUPADO">OCUPADO</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="modeloVeiculo">Modelo do Veículo *</label>
+
+                <div class="select-wrap">
+                  <select id="modeloVeiculo" name="modeloVeiculo" required>
+                    <option value="">Selecione o modelo</option>
+                    <option value="VAN">VAN</option>
+                    <option value="TIPO 3/4">TIPO 3/4</option>
+                    <option value="FIORINO">FIORINO</option>
+                    <option value="TOCO">TOCO</option>
+                    <option value="TRUCK">TRUCK</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="operacao">OPERAÇÃO *</label>
+
+                <div class="select-wrap">
+                  <select id="operacao" name="operacao" required>
+                    <option value="">Selecione a operação</option>
+                    <option value="CONGELADO">CONGELADO</option>
+                    <option value="REFRIGERADO">REFRIGERADO</option>
+                    <option value="SECO">SECO</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <p class="timestamp-note">
+            A data e hora de preenchimento são registradas automaticamente
+            no momento do envio do formulário.
+          </p>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-submit" id="btnSubmit">
+              <span class="btn-text">Enviar Disponibilidade</span>
+              <span class="btn-loader" style="display: none;"></span>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div
+        id="messageBox"
+        class="message-box"
+        style="display: none;"
+      ></div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2026 GOLOG — Todos os direitos reservados</p>
+    </footer>
+  </div>
+
+  <script src="disponibilidade-frota.js"></script>
+</body>
+</html>

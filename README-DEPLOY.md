@@ -123,6 +123,17 @@ este script não grava nelas.
    - **Quem tem acesso:** "Qualquer pessoa".
 4. Clique em **"Implantar"** e copie a URL gerada (termina em `/exec`).
 
+### Republicar sempre que o `.gs` mudar
+
+Salvar o código no editor **não** atualiza a URL `/exec` — o Web App
+serve a última *versão implantada*. Depois de colar uma nova versão de
+`google-apps-script.gs`, vá em "Implantar" > "Gerenciar implantações" >
+lápis > **Versão: "Nova versão"** > "Implantar".
+
+Abrir a URL `/exec` no navegador mostra a versão no ar (campo `versao`
+do `doGet`). O código atual desta pasta é a versão
+`2.0 - Validação tolerante de placa e carga`.
+
 ---
 
 ## Configuração do Frontend
@@ -133,7 +144,12 @@ Abra `disponibilidade-frota.js` e substitua:
 const APPS_SCRIPT_URL = 'SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI';
 ```
 
-pela URL copiada no passo anterior.
+pela URL copiada no passo anterior. Enquanto essa constante ficar com
+o texto de exemplo, **todo envio falha**: o `fetch` vai para uma URL
+relativa do próprio site, recebe um 404 em HTML e o formulário mostra
+"Erro ao enviar a disponibilidade" mesmo com placa e carga válidas.
+Depois de trocar a URL, faça commit e push — a Vercel republica o
+site com o arquivo novo.
 
 ---
 

@@ -3,8 +3,17 @@
 // JavaScript para validações, máscaras e envio
 // ============================================================
 
-// IMPORTANTE: substitua esta URL pela URL do seu Google Apps Script
-const APPS_SCRIPT_URL = 'SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI';
+// URL da implantação do Apps Script (Implantar -> Nova implantação ->
+// App da Web). Precisa ser absoluta e terminar em /exec: com o texto de
+// exemplo que ficava aqui antes, o fetch caía em uma URL relativa do
+// próprio site, recebia um 404 em HTML e o formulário mostrava o erro
+// genérico de envio mesmo com placa e carga corretas.
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUxhP1bL90CDyCDu9xETZGpkoTfQe-u0h3CouS1BlTGI27WEyzr6xZm371QUxVPus/exec';
+
+function urlConfigurada() {
+  return APPS_SCRIPT_URL.indexOf('https://') === 0
+    && APPS_SCRIPT_URL.indexOf('/exec') !== -1;
+}
 
 // ============================================================
 // MÁSCARAS E VALIDAÇÕES
@@ -167,6 +176,17 @@ async function handleSubmit(e) {
     return;
   }
 
+  if (!urlConfigurada()) {
+    mostrarMensagem(
+      'error',
+      'O formulário ainda não está ligado ao Apps Script: a constante ' +
+      'APPS_SCRIPT_URL em disponibilidade-frota.js continua com a URL de ' +
+      'exemplo. Publique o script como App da Web e cole aqui a URL /exec.'
+    );
+
+    return;
+  }
+
   // Desabilitar botão e mostrar carregamento
   btnSubmit.disabled = true;
   btnText.style.display = 'none';
@@ -197,7 +217,21 @@ async function handleSubmit(e) {
       body: formData
     });
 
-    const result = await response.json();
+    // O Apps Script responde JSON. Qualquer outra coisa (página de erro
+    // do Google, tela de login, 404 do próprio site) vira uma mensagem
+    // explicando o que veio, em vez do erro genérico de envio.
+    const corpo = await response.text();
+    let result;
+
+    try {
+      result = JSON.parse(corpo);
+    } catch (erroParse) {
+      throw new Error(
+        `O servidor respondeu ${response.status} sem JSON. Confira se a URL ` +
+        'do Apps Script é a de implantação (/exec) e se o acesso está como ' +
+        '"Qualquer pessoa".'
+      );
+    }
 
     if (result.success) {
       mostrarMensagem(
@@ -236,6 +270,7 @@ async function handleSubmit(e) {
 
     mostrarMensagem(
       'error',
+      (error && error.message ? error.message + ' ' : '') +
       'Erro ao enviar a disponibilidade. Por favor, tente novamente. ' +
       'Se o problema persistir, entre em contato conosco.'
     );

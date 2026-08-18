@@ -69,7 +69,7 @@ function doPost(e) {
 // ============================================================
 
 function validarDisponibilidade(dados) {
-  const placa = normalizarTexto(dados.placaVeiculo);
+  const placa = normalizarPlaca(dados.placaVeiculo);
 
   if (!placa) {
     return 'Informe a placa do veículo.';
@@ -81,15 +81,22 @@ function validarDisponibilidade(dados) {
       + `no Cadflow antes de informar a disponibilidade.`;
   }
 
-  const codCarga = normalizarTexto(dados.codUltimaCarga);
+  const codCarga = normalizarCarga(dados.codUltimaCarga);
 
   if (!codCarga) {
     return 'Informe o código da última carga.';
   }
 
-  if (!cargaFinalizada(codCarga)) {
-    return `Ultima carga não finalizada: o código "${codCarga}" não consta `
-      + `com Data Fim Viagem preenchida na aba "${ABA_CARGAS_FINALIZADAS}". `
+  const situacaoCarga = situacaoDaCarga(codCarga);
+
+  if (situacaoCarga === 'NAO_ENCONTRADA') {
+    return `Ultima carga não encontrada: o código "${codCarga}" não consta `
+      + `na aba "${ABA_CARGAS_FINALIZADAS}".`;
+  }
+
+  if (situacaoCarga === 'SEM_DATA_FIM') {
+    return `Ultima carga não finalizada: o código "${codCarga}" está na aba `
+      + `"${ABA_CARGAS_FINALIZADAS}" sem a Data Fim Viagem preenchida. `
       + `O motorista ainda tem carga em aberto.`;
   }
 
@@ -126,7 +133,7 @@ function placaCadastrada(placaNormalizada) {
   }
 
   for (let i = 1; i < valores.length; i++) {
-    if (normalizarTexto(valores[i][colPlaca]) === placaNormalizada) {
+    if (normalizarPlaca(valores[i][colPlaca]) === placaNormalizada) {
       return true;
     }
   }
@@ -135,9 +142,11 @@ function placaCadastrada(placaNormalizada) {
 }
 
 // Procura o código na coluna "Carga Limpa" (F) da aba
-// Cargas_Finalizadas e verifica se a linha correspondente tem a
-// "Data Fim Viagem" (E) preenchida.
-function cargaFinalizada(codCargaNormalizado) {
+// Cargas_Finalizadas e informa a situação encontrada:
+//   'FINALIZADA'     - carga na aba com "Data Fim Viagem" (E) preenchida
+//   'SEM_DATA_FIM'   - carga na aba, mas sem data de fim
+//   'NAO_ENCONTRADA' - código ausente da aba
+function situacaoDaCarga(codCargaNormalizado) {
   const planilha = SpreadsheetApp.openById(PLANILHA_ID);
   const aba = planilha.getSheetByName(ABA_CARGAS_FINALIZADAS);
 
@@ -148,7 +157,7 @@ function cargaFinalizada(codCargaNormalizado) {
   const valores = aba.getDataRange().getValues();
 
   if (valores.length < 2) {
-    return false;
+    return 'NAO_ENCONTRADA';
   }
 
   const cabecalhos = valores[0];
@@ -165,14 +174,26 @@ function cargaFinalizada(codCargaNormalizado) {
     colDataFim = 4;
   }
 
+  let encontrada = false;
+
   for (let i = 1; i < valores.length; i++) {
-    if (normalizarTexto(valores[i][colCarga]) === codCargaNormalizado) {
-      const dataFim = valores[i][colDataFim];
-      return dataFim !== '' && dataFim !== null;
+    if (normalizarCarga(valores[i][colCarga]) !== codCargaNormalizado) {
+      continue;
+    }
+
+    encontrada = true;
+
+    const dataFim = valores[i][colDataFim];
+
+    // A célula pode trazer um Date, um número de série ou texto; só
+    // interessa se tem algum conteúdo. Uma linha repetida sem data não
+    // invalida outra linha da mesma carga já finalizada.
+    if (dataFim instanceof Date || String(dataFim || '').trim() !== '') {
+      return 'FINALIZADA';
     }
   }
 
-  return false;
+  return encontrada ? 'SEM_DATA_FIM' : 'NAO_ENCONTRADA';
 }
 
 // Procura, entre os cabeçalhos, a primeira coluna cujo nome contém
@@ -195,6 +216,27 @@ function normalizarTexto(valor) {
     .toUpperCase();
 }
 
+// Placa comparada só por letras e números: assim "RHZ-2A82",
+// "rhz2a82" e "RHZ2A82 " batem com o mesmo cadastro.
+function normalizarPlaca(valor) {
+  return normalizarTexto(valor).replace(/[^A-Z0-9]/g, '');
+}
+
+// Código de carga comparado no mesmo formato produzido pelo
+// LIMPARCARGA: sem o prefixo "NNN-" da origem e sem o que vier depois
+// da vírgula.
+function normalizarCarga(valor) {
+  let texto = normalizarTexto(valor);
+
+  if (texto.indexOf(',') !== -1) {
+    texto = texto.split(',')[0];
+  }
+
+  texto = texto.replace(/^\d+-/, '');
+
+  return texto.trim();
+}
+
 // ============================================================
 // GARANTIR CABEÇALHO (cria apenas se a linha 1 estiver vazia)
 // ============================================================
@@ -214,7 +256,7 @@ function garantirCabecalho(aba) {
 
 function prepararLinha(dados) {
   return [
-    normalizarTexto(dados.placaVeiculo),
+    normalizarPlaca(dados.placaVeiculo),
     dados.nomeMotorista || '',
     dados.status || '',
     dados.modeloVeiculo || '',
@@ -262,6 +304,25 @@ function testarConfiguracao() {
 }
 
 // ============================================================
+// DIAGNÓSTICO DE UMA VALIDAÇÃO
+//
+// Troque os valores abaixo e rode pelo editor (Executar) para ver, no
+// Registro de execução, exatamente por que uma disponibilidade foi
+// recusada — sem precisar reenviar o formulário.
+// ============================================================
+
+function testarValidacao() {
+  const placa = 'RHZ2A82';
+  const carga = '458004';
+
+  Logger.log(`Placa "${normalizarPlaca(placa)}" cadastrada: `
+    + placaCadastrada(normalizarPlaca(placa)));
+
+  Logger.log(`Carga "${normalizarCarga(carga)}": `
+    + situacaoDaCarga(normalizarCarga(carga)));
+}
+
+// ============================================================
 // TESTE DE ACESSO VIA GET (retorna status ao abrir a URL)
 // ============================================================
 
@@ -269,6 +330,6 @@ function doGet() {
   return respostaJson({
     status: 'OK',
     message: 'Script funcionando corretamente',
-    versao: '1.2'
+    versao: '2.0 - Validação tolerante de placa e carga'
   });
 }

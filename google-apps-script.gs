@@ -76,9 +76,9 @@ function validarDisponibilidade(dados) {
   }
 
   if (!placaCadastrada(placa)) {
-    return `Placa não cadastrada: "${placa}" não consta na coluna PLACA `
-      + `da aba "${ABA_CADASTROS}". Cadastre o veículo no Cadflow antes `
-      + `de informar a disponibilidade.`;
+    return `Veiculo sem Cadastro: a placa "${placa}" não consta na coluna `
+      + `"PLACA do Veiculo" da aba "${ABA_CADASTROS}". Cadastre o veículo `
+      + `no Cadflow antes de informar a disponibilidade.`;
   }
 
   const codCarga = normalizarTexto(dados.codUltimaCarga);
@@ -88,8 +88,8 @@ function validarDisponibilidade(dados) {
   }
 
   if (!cargaFinalizada(codCarga)) {
-    return `Carga não finalizada: o código "${codCarga}" não consta com `
-      + `Data Fim Viagem preenchida na aba "${ABA_CARGAS_FINALIZADAS}". `
+    return `Ultima carga não finalizada: o código "${codCarga}" não consta `
+      + `com Data Fim Viagem preenchida na aba "${ABA_CARGAS_FINALIZADAS}". `
       + `O motorista ainda tem carga em aberto.`;
   }
 
@@ -97,11 +97,13 @@ function validarDisponibilidade(dados) {
 }
 
 // Coluna I (índice 8, zero-based) da aba Bd_Cadastros — "PLACA do
-// Veiculo". Fixo por definição da planilha, sem busca por cabeçalho.
+// Veiculo". Usado como fallback caso o cabeçalho não seja encontrado
+// pelo nome (por exemplo, se a coluna for renomeada ou reordenada).
 const COL_PLACA_CADASTROS = 8;
 
-// Procura a placa na coluna I da aba Bd_Cadastros. Retorna true se
-// encontrada.
+// Procura a placa na coluna "PLACA do Veiculo" da aba Bd_Cadastros
+// (por nome de cabeçalho, com fallback para a coluna I). Retorna true
+// se encontrada.
 function placaCadastrada(placaNormalizada) {
   const planilha = SpreadsheetApp.openById(PLANILHA_ID);
   const aba = planilha.getSheetByName(ABA_CADASTROS);
@@ -116,8 +118,15 @@ function placaCadastrada(placaNormalizada) {
     return false;
   }
 
+  const cabecalhos = valores[0];
+  let colPlaca = encontrarColuna(cabecalhos, 'PLACA do Veiculo');
+
+  if (colPlaca === -1) {
+    colPlaca = COL_PLACA_CADASTROS;
+  }
+
   for (let i = 1; i < valores.length; i++) {
-    if (normalizarTexto(valores[i][COL_PLACA_CADASTROS]) === placaNormalizada) {
+    if (normalizarTexto(valores[i][colPlaca]) === placaNormalizada) {
       return true;
     }
   }

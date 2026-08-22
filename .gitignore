@@ -32,3 +32,6 @@ dist/
 # Temporary files
 *.tmp
 *.temp
+
+# Sobras da geração do favicon (o gps.png versionado é a fonte)
+gps_b64*.txt

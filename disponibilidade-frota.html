@@ -164,6 +164,87 @@
         class="message-box"
         style="display: none;"
       ></div>
+
+      <!-- ============================================================
+           Consulta de Rota do Dia
+           ============================================================ -->
+      <section class="consulta-rota" aria-labelledby="consultaRotaTitulo">
+        <div class="form-header">
+          <h2 id="consultaRotaTitulo">Consultar Rota do Dia</h2>
+          <p>
+            Informe a placa e a data em que o roteirizador registrou a
+            carga para ver a rota, a ordem de prioridade e o dia de
+            carregamento.
+          </p>
+        </div>
+
+        <form id="consultaRotaForm">
+          <div class="panel">
+            <section class="form-section">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="placaConsulta">PLACA do Veículo *</label>
+
+                  <input
+                    type="text"
+                    id="placaConsulta"
+                    name="placaConsulta"
+                    placeholder="AAA0A00 ou AAA0000"
+                    maxlength="7"
+                    autocomplete="off"
+                    required
+                  >
+
+                  <span class="field-hint">
+                    Mesma placa usada no registro de disponibilidade.
+                  </span>
+                </div>
+
+                <div class="form-group">
+                  <label for="dataConsulta">Data da Rota *</label>
+
+                  <input
+                    type="date"
+                    id="dataConsulta"
+                    name="dataConsulta"
+                    required
+                  >
+
+                  <span class="field-hint">
+                    Data em que a rota foi registrada (DATA PREENCHEU ROT).
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="btn-submit"
+                id="btnConsultarRota"
+              >
+                <span class="btn-text">Consultar Rota</span>
+                <span class="btn-loader" style="display: none;"></span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div
+          id="rotaMessageBox"
+          class="message-box"
+          style="display: none;"
+          role="status"
+          aria-live="polite"
+        ></div>
+
+        <div
+          id="rotaResultado"
+          class="rota-resultado"
+          style="display: none;"
+          aria-live="polite"
+        ></div>
+      </section>
     </main>
 
     <footer class="footer">

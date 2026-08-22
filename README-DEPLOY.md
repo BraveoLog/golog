@@ -74,6 +74,61 @@ formulário que cria o cadastro em `Bd_Cadastros`) não passa por elas.
 
 ---
 
+## Consulta de Rota do Dia
+
+Abaixo do formulário de disponibilidade, a página tem a seção
+**"Consultar Rota do Dia"**: o motorista informa a **placa** e a
+**data da rota** e recebe a rota, a ordem de prioridade, o motorista
+e o dia de carregamento.
+
+A consulta usa **a mesma implantação** do Apps Script — o que separa
+os dois fluxos no `doPost` é o parâmetro `acao=consultarRota`. Não há
+segunda planilha, segundo script nem segunda URL.
+
+### Colunas lidas
+
+A leitura é feita na aba `Disponibilidade` (constante `ABA_ROTAS`), a
+mesma que recebe os envios do formulário:
+
+| Coluna | Cabeçalho | Papel na consulta |
+|---|---|---|
+| A | PLACA | filtro — placa informada pelo motorista |
+| B | MOTORISTA | devolvido no resultado |
+| J | ORDEM | devolvido (1 prioridade, 2 média, 3 baixa) |
+| K | ROTA | **resposta principal** |
+| L | DATA PREENCHEU ROT | filtro — data digitada pelo motorista |
+| M | DATA_CARREGAMENTO | devolvido — dia em que a rota será rodada |
+
+As colunas são localizadas **pelo cabeçalho** (sem acento, sem
+underscore, ignorando maiúsculas), com os índices acima apenas como
+fallback. Reordenar ou renomear levemente as colunas na planilha não
+quebra a consulta. Se a roteirização passar a ser registrada em outra
+aba, basta trocar a constante `ABA_ROTAS` no `.gs`.
+
+### Comportamento da busca
+
+1. Filtra as linhas da placa informada que já tenham **ROTA**
+   preenchida (linhas de disponibilidade ainda sem roteirização são
+   ignoradas).
+2. Casa a data digitada com a **DATA PREENCHEU ROT** (coluna L).
+3. Se nada bater, tenta a **DATA_CARREGAMENTO** (coluna M) — é comum
+   o motorista digitar o dia em que vai rodar, e não o dia em que a
+   carga foi registrada. Nesse caso o rodapé do cartão avisa qual data
+   foi usada.
+4. Se a placa tem rotas, mas nenhuma na data pedida, a mensagem traz
+   até 5 **datas disponíveis** como botões — um clique já refaz a
+   consulta naquela data.
+5. Se a placa não tem nenhuma rota registrada, a mensagem orienta a
+   procurar o roteirizador.
+
+Datas são comparadas normalizadas em `yyyy-MM-dd`, aceitando o que a
+planilha devolver: `Date`, número de série do Sheets ou texto
+(`22/08/2026`, `22/08/26`, `2026-08-22`), sempre no fuso da planilha.
+
+A consulta é **somente leitura** — nenhuma linha é gravada ou alterada.
+
+---
+
 ## Configuração do Google Apps Script
 
 ### Passo 1: Planilha e aba de destino
@@ -93,9 +148,10 @@ O formulário preenche as colunas **A a G**:
 | F | COD DA ULTIMA CARGA | campo Cod da Última Carga |
 | G | DATA PREENCHEU | carimbo automático no envio |
 
-As colunas H em diante (UTILIZAÇÃO, SEGMENTO, ORDEM, ROTA, etc.) já
-existem na planilha e continuam sendo preenchidas por outro processo —
-este script não grava nelas.
+As colunas H em diante (UTILIZAÇÃO, SEGMENTO, ORDEM, ROTA, DATA
+PREENCHEU ROT, DATA_CARREGAMENTO) já existem na planilha e continuam
+sendo preenchidas por outro processo — este script **nunca grava**
+nelas, apenas **lê** J, K, L e M na Consulta de Rota do Dia.
 
 ### Passo 2: Criar o Google Apps Script
 
@@ -132,7 +188,12 @@ lápis > **Versão: "Nova versão"** > "Implantar".
 
 Abrir a URL `/exec` no navegador mostra a versão no ar (campo `versao`
 do `doGet`). O código atual desta pasta é a versão
-`2.0 - Validação tolerante de placa e carga`.
+`2.1 - Validação tolerante de placa e carga + consulta de rota`.
+
+Se a Consulta de Rota responder *"O servidor respondeu 200 sem JSON"*
+ou continuar dizendo que a placa não tem rota, o sintoma quase sempre é
+esse: a implantação no ar ainda é a versão anterior, sem o
+`acao === 'consultarRota'` no `doPost`. Republique.
 
 ---
 
@@ -165,9 +226,9 @@ directory.
 
 ```text
 GOLOG/
-├── disponibilidade-frota.html   # Estrutura HTML do formulário
+├── disponibilidade-frota.html   # Formulário + Consulta de Rota do Dia
 ├── disponibilidade-frota.css    # Layout corporativo, sem gradiente/emoji
-├── disponibilidade-frota.js     # Validações, máscara de placa e envio
-├── google-apps-script.gs        # Backend + validações contra Bd_Cadastro
+├── disponibilidade-frota.js     # Validações, máscara, envio e consulta
+├── google-apps-script.gs        # Backend: gravação, validações e consulta
 └── README-DEPLOY.md             # Este arquivo
 ```

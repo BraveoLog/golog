@@ -162,12 +162,17 @@ body {
   margin: 28px 0 20px;
 }
 
-.form-header h1 {
+.form-header h1,
+.form-header h2 {
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--c-text);
   margin-bottom: 6px;
+}
+
+.form-header h2 {
+  font-size: 1.25rem;
 }
 
 .form-header p {
@@ -227,6 +232,7 @@ body {
 }
 
 .form-group input[type="text"],
+.form-group input[type="date"],
 .form-group select {
   width: 100%;
   padding: 10px 12px;
@@ -410,6 +416,169 @@ body {
 
 .form-group.has-error .error-message {
   display: block;
+}
+
+/* ── Consulta de Rota do Dia ── */
+.consulta-rota {
+  margin-top: 34px;
+  padding-top: 30px;
+  border-top: 1px solid var(--c-border);
+}
+
+/* O campo de data no Safari/iOS encolhe sem altura mínima, e o ícone
+   nativo do calendário fica ilegível no modo escuro sem color-scheme. */
+.form-group input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 42px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  .form-group input[type="date"] {
+    color-scheme: dark;
+  }
+}
+
+.rota-resultado {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rota-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-left: 3px solid var(--c-brand);
+  border-radius: var(--r-md);
+  box-shadow: 0 1px 2px rgba(16, 20, 30, 0.05);
+  overflow: hidden;
+}
+
+.rota-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  background: var(--c-brand-tint);
+  border-bottom: 1px solid var(--c-brand-line);
+}
+
+.rota-card-head .rota-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.rota-nome {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--c-brand-text);
+  line-height: 1.25;
+}
+
+.rota-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 999px;
+  background: var(--c-surface);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text-soft);
+  white-space: nowrap;
+}
+
+.rota-badge.ordem-1 {
+  border-color: var(--c-danger-line);
+  background: var(--c-danger-tint);
+  color: var(--c-danger-text);
+}
+
+.rota-badge.ordem-2 {
+  border-color: var(--c-brand-line);
+  background: var(--c-brand-tint);
+  color: var(--c-brand-text);
+}
+
+.rota-badge.ordem-3 {
+  border-color: var(--c-success-line);
+  background: var(--c-success-tint);
+  color: var(--c-success-text);
+}
+
+.rota-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px 20px;
+  padding: 16px 20px;
+  margin: 0;
+}
+
+.rota-grid dt {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: 2px;
+}
+
+.rota-grid dd {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--c-text);
+  word-break: break-word;
+}
+
+.rota-origem {
+  padding: 10px 20px;
+  background: var(--c-surface-alt);
+  border-top: 1px solid var(--c-border);
+  font-size: 0.72rem;
+  color: var(--c-text-muted);
+}
+
+/* Datas sugeridas quando a placa não tem rota na data pedida */
+.rota-sugestoes {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btn-sugestao {
+  padding: 4px 10px;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-text-soft);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.1s ease, color 0.1s ease;
+}
+
+.btn-sugestao:hover {
+  border-color: var(--c-brand-focus);
+  color: var(--c-brand-text);
+}
+
+.btn-sugestao:focus-visible {
+  outline: 2px solid var(--c-brand-focus);
+  outline-offset: 2px;
 }
 
 /* Footer */

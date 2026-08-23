@@ -172,15 +172,63 @@
         <div class="form-header">
           <h2 id="consultaRotaTitulo">Consultar Rota do Dia</h2>
           <p>
-            Informe a placa e a data em que o roteirizador registrou a
-            carga para ver a rota, a ordem de prioridade e o dia de
-            carregamento.
+            Informe o CNPJ da empresa, o CPF do motorista, a placa e a
+            data em que o roteirizador registrou a carga para ver a
+            rota, a ordem de prioridade e o dia de carregamento.
+          </p>
+
+          <p class="consulta-rota-trava">
+            O CNPJ e o CPF são conferidos na mesma linha do cadastro da
+            placa: a rota só aparece para quem está cadastrado no veículo
+            consultado.
           </p>
         </div>
 
         <form id="consultaRotaForm">
           <div class="panel">
             <section class="form-section">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="cnpjConsulta">CNPJ da Empresa *</label>
+
+                  <input
+                    type="text"
+                    id="cnpjConsulta"
+                    name="cnpjConsulta"
+                    placeholder="00.000.000/0000-00"
+                    maxlength="18"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    required
+                  >
+
+                  <span class="field-hint">
+                    Digite apenas números. Mesmo CNPJ do cadastro no
+                    Cadflow.
+                  </span>
+                </div>
+
+                <div class="form-group">
+                  <label for="cpfConsulta">CPF do Motorista *</label>
+
+                  <input
+                    type="text"
+                    id="cpfConsulta"
+                    name="cpfConsulta"
+                    placeholder="000.000.000-00"
+                    maxlength="14"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    required
+                  >
+
+                  <span class="field-hint">
+                    Digite apenas números. CPF do motorista cadastrado
+                    nesta placa.
+                  </span>
+                </div>
+              </div>
+
               <div class="form-row">
                 <div class="form-group">
                   <label for="placaConsulta">PLACA do Veículo *</label>

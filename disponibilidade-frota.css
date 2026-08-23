@@ -425,6 +425,18 @@ body {
   border-top: 1px solid var(--c-border);
 }
 
+/* Aviso da trava de acesso: destaca que a consulta é pessoal, para o
+   motorista não confundir com um campo opcional a mais. */
+.form-header p.consulta-rota-trava {
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: var(--c-brand-tint);
+  border: 1px solid var(--c-brand-line);
+  border-radius: var(--r-md);
+  color: var(--c-brand-text);
+  font-size: 0.82rem;
+}
+
 /* O campo de data no Safari/iOS encolhe sem altura mínima, e o ícone
    nativo do calendário fica ilegível no modo escuro sem color-scheme. */
 .form-group input[type="date"] {

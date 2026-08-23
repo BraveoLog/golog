@@ -77,13 +77,44 @@ formulário que cria o cadastro em `Bd_Cadastros`) não passa por elas.
 ## Consulta de Rota do Dia
 
 Abaixo do formulário de disponibilidade, a página tem a seção
-**"Consultar Rota do Dia"**: o motorista informa a **placa** e a
-**data da rota** e recebe a rota, a ordem de prioridade, o motorista
-e o dia de carregamento.
+**"Consultar Rota do Dia"**: o motorista informa o **CNPJ da empresa**,
+o **CPF do motorista**, a **placa** e a **data da rota**, e recebe a
+rota, a ordem de prioridade, o motorista e o dia de carregamento.
 
 A consulta usa **a mesma implantação** do Apps Script — o que separa
 os dois fluxos no `doPost` é o parâmetro `acao=consultarRota`. Não há
 segunda planilha, segundo script nem segunda URL.
+
+### Trava de acesso (CNPJ + CPF)
+
+Antes de ler qualquer rota, o script confere o CNPJ e o CPF informados
+na aba `Bd_Cadastros` (constante `ABA_CADASTROS`), a mesma que o
+**Cadflow** preenche:
+
+| Coluna | Cabeçalho | Papel na trava |
+|---|---|---|
+| C | Numero CNPJ | CNPJ da empresa dona do veículo |
+| G | CPF MOTORISTA | CPF do motorista cadastrado na placa |
+| I | PLACA do Veiculo | placa consultada |
+
+A conferência é **por linha**: não basta o CNPJ existir e o CPF existir
+em algum lugar da aba — os dois precisam estar **na mesma linha da
+placa consultada**. É isso que impede um motorista de ler a rota de
+outro sabendo apenas a placa e o dia. Se a placa tiver mais de uma
+linha (recadastro, troca de motorista), qualquer uma que bata nos dois
+documentos libera a consulta.
+
+Regras de preenchimento **idênticas às do Cadflow**: mesmas máscaras
+(`00.000.000/0000-00` e `000.000.000-00`) e mesmos dígitos
+verificadores, validados no navegador antes do envio. Na comparação,
+os dois lados são reduzidos a dígitos, e o valor da planilha é
+completado com zeros à esquerda — célula gravada como número perde o
+zero inicial de um CPF como `012.345.678-90`.
+
+Quando os documentos não conferem, a resposta é **uma mensagem só**,
+sem dizer qual dos dois campos errou: apontar o campo entregaria, por
+tentativa e erro, o CNPJ ou o CPF de quem está cadastrado na placa.
+
 
 ### Colunas lidas
 

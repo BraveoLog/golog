@@ -324,6 +324,20 @@ function consultarRota(dados) {
     });
   }
 
+  // Trava de acesso: a rota só é devolvida se o CNPJ da empresa e o CPF
+  // do motorista estiverem na MESMA linha do cadastro desta placa. Sem
+  // isso, bastava conhecer a placa e o dia para ler a rota de outro
+  // motorista.
+  const acesso = validarAcessoRota(
+    placa,
+    dados.cnpjConsulta,
+    dados.cpfConsulta
+  );
+
+  if (!acesso.autorizado) {
+    return respostaJson({ success: false, message: acesso.message });
+  }
+
   const aba = planilha.getSheetByName(ABA_ROTAS);
 
   if (!aba) {
@@ -430,6 +444,132 @@ function consultarRota(dados) {
     message: `A placa "${placa}" não tem rota registrada em ${dataBuscaBr}.`,
     sugestoes: sugestoes
   });
+}
+
+// ============================================================
+// TRAVA DE ACESSO DA CONSULTA DE ROTA
+//
+// Confere CNPJ e CPF contra a aba Bd_Cadastros da própria planilha
+// Bd_Cadastro — o mesmo cadastro que o Cadflow preenche. A conferência
+// é por LINHA: não basta o CNPJ existir e o CPF existir em algum lugar
+// da aba, os dois precisam estar na linha da placa consultada.
+// ============================================================
+
+// Índices zero-based do layout atual de Bd_Cadastros, usados quando o
+// cabeçalho não é localizado pelo nome: C "Numero CNPJ", G "CPF
+// MOTORISTA", I "PLACA do Veiculo".
+const COL_CADASTROS_FALLBACK = {
+  cnpj: 2,
+  cpf: 6,
+  placa: 8
+};
+
+function validarAcessoRota(placa, cnpjInformado, cpfInformado) {
+  const cnpj = somenteDigitos(cnpjInformado);
+  const cpf = somenteDigitos(cpfInformado);
+
+  if (cnpj.length !== 14) {
+    return {
+      autorizado: false,
+      message: 'Informe o CNPJ da empresa (14 dígitos) para consultar a rota.'
+    };
+  }
+
+  if (cpf.length !== 11) {
+    return {
+      autorizado: false,
+      message: 'Informe o CPF do motorista (11 dígitos) para consultar a rota.'
+    };
+  }
+
+  const planilha = SpreadsheetApp.openById(PLANILHA_ID);
+  const aba = planilha.getSheetByName(ABA_CADASTROS);
+
+  if (!aba) {
+    throw new Error(`Aba "${ABA_CADASTROS}" não encontrada na planilha`);
+  }
+
+  const valores = aba.getDataRange().getValues();
+
+  if (valores.length < 2) {
+    return {
+      autorizado: false,
+      message: `A aba "${ABA_CADASTROS}" está vazia: não há cadastro para `
+        + `conferir o CNPJ e o CPF.`
+    };
+  }
+
+  const cabecalhos = valores[0];
+
+  // Só os nomes exatos das colunas: uma busca solta por "CNPJ" pegaria
+  // "Nome completo do Responsável CNPJ" (B) ou "Cartão CNPJ" (D).
+  const colPlaca = colunaPorCabecalho(
+    cabecalhos, ['PLACA DO VEICULO'], COL_CADASTROS_FALLBACK.placa
+  );
+  const colCnpj = colunaPorCabecalho(
+    cabecalhos, ['NUMERO CNPJ'], COL_CADASTROS_FALLBACK.cnpj
+  );
+  const colCpf = colunaPorCabecalho(
+    cabecalhos, ['CPF MOTORISTA'], COL_CADASTROS_FALLBACK.cpf
+  );
+
+  let temCadastro = false;
+
+  for (let i = 1; i < valores.length; i++) {
+    const linha = valores[i];
+
+    if (normalizarPlaca(linha[colPlaca]) !== placa) {
+      continue;
+    }
+
+    temCadastro = true;
+
+    // A mesma placa pode ter mais de uma linha (recadastro, troca de
+    // motorista): qualquer uma que bata nos dois documentos libera.
+    if (documentoConfere(linha[colCnpj], cnpj)
+      && documentoConfere(linha[colCpf], cpf)) {
+      return { autorizado: true };
+    }
+  }
+
+  if (!temCadastro) {
+    return {
+      autorizado: false,
+      message: `Veiculo sem Cadastro: a placa "${placa}" não consta na aba `
+        + `"${ABA_CADASTROS}". Cadastre o veículo no Cadflow antes de `
+        + `consultar a rota.`
+    };
+  }
+
+  // Uma mensagem só, de propósito: apontar qual dos dois campos errou
+  // entregaria, por tentativa e erro, o CNPJ ou o CPF de quem está
+  // cadastrado na placa.
+  return {
+    autorizado: false,
+    message: `CNPJ e CPF não conferem com o cadastro da placa "${placa}". `
+      + `A rota só é liberada para o motorista cadastrado neste veículo.`
+  };
+}
+
+// Compara o documento da planilha com o que o motorista digitou, os
+// dois reduzidos a dígitos. Célula gravada como número perde os zeros à
+// esquerda (o CPF "012..." vira "12..."), por isso o valor da planilha é
+// completado à esquerda antes da comparação.
+function documentoConfere(valorPlanilha, informado) {
+  const daPlanilha = somenteDigitos(valorPlanilha);
+
+  if (!daPlanilha) {
+    return false;
+  }
+
+  return daPlanilha.padStart(informado.length, '0') === informado;
+}
+
+// Só os dígitos: "12.345.678/0001-95" e "12345678000195" viram a mesma
+// chave de comparação.
+function somenteDigitos(valor) {
+  return String(valor === null || valor === undefined ? '' : valor)
+    .replace(/\D/g, '');
 }
 
 // Localiza cada coluna da consulta pelo cabeçalho, com fallback para o
